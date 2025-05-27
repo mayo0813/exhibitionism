@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개인정보 수집 동의 - Privacy Collection</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_three@1.0/DungGeunMo.woff') format('woff');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DungGeunMo', 'Courier New', monospace;
+            background: #000000;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 14px;
+        }
+        
+        .main-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .camera-section {
+            flex: 1;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-right: 2px solid #ffffff;
+            position: relative;
+        }
+        
+        .form-section {
+            flex: 1;
+            background: #ffffff;
+            color: #000000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .camera-container {
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            height: 70%;
+            max-height: 400px;
+            border: 2px solid #ffffff;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .camera-info {
+            color: #ffffff;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .camera-info h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .pixel-count {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            width: 90%;
+            max-width: 500px;
+            height: 10px;
+            background: #333;
+            border: 1px solid #ffffff;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #ffffff;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+        }
+        
+        .form-header h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .form-header p {
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #000;
+            background: #ffffff;
+            color: #000;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #666;
+        }
+        
+        .form-group input::placeholder, .form-group textarea::placeholder {
+            color: #999;
+        }
+        
+        .form-section-divider {
+            border-top: 1px solid #ccc;
+            margin: 30px 0 20px 0;
+            padding-top: 20px;
+        }
+        
+        .form-section-divider h3 {
+            margin-bottom: 15px;
+            color: #000;
+        }
+        
+        .consent-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .consent-content {
+            background: #ffffff;
+            color: #000;
+            border: 3px solid #000;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .consent-content h2 {
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            letter-spacing: 1px;
+        }
+        
+        .consent-content p {
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        
+        .consent-button {
+            background: #000;
+            border: 2px solid #000;
+            padding: 15px 40px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .consent-button:hover {
+            background: #fff;
+            color: #000;
+        }
+        
+        .more-info-section {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        
+        .more-info-btn {
+            background: #000;
+            border: 2px solid #000;
+            padding: 10px 20px;
+            color: #fff;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .more-info-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+        
+        .more-info-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .custom-questions-section {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+        }
+        
+        .custom-question-item {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .custom-question-item input, .custom-question-item textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+        
+        .custom-question-item .question-input {
+            font-weight: bold;
+            border-bottom: 2px solid #000;
+        }
+        
+        .custom-question-item .answer-input {
+            border-top: none;
+            min-height: 60px;
+        }
+        
+        .remove-question-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .remove-question-btn:hover {
+            background: #cc0000;
+        }
+        
+        .add-question-btn {
+            background: #000;
+            color: #fff;
+            border: 2px solid #000;
+            padding: 12px 25px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .add-question-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+        
+        .save-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #fff;
+            color: #000;
+            border: 2px solid #000;
+            padding: 12px 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .save-button:hover {
+            background: #000;
+            color: #fff;
+        }
+        
+        .gallery-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #fff;
+            color: #000;
+            border: 2px solid #000;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-button:hover {
+            background: #000;
+            color: #fff;
+        }
+        
+        .gallery-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .gallery-header {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .gallery-content {
+            flex: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .gallery-item {
+            background: #fff;
+            color: #000;
+            border: 2px solid #fff;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .gallery-image {
+            width: 100%;
+            max-width: 250px;
+            height: auto;
+            margin-bottom: 10px;
+            border: 1px solid #000;
+        }
+        
+        .gallery-info {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .gallery-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            color: #000;
+            border: 2px solid #fff;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .gallery-close:hover {
+            background: #000;
+            color: #fff;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .camera-section, .form-section {
+                flex: none;
+                height: 50vh;
+            }
+            
+            body {
+                overflow: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 개인정보 동의 팝업 -->
+    <div class="consent-popup" id="consentPopup">
+        <div class="consent-content">
+            <h2>개인정보 수집 및 이용 동의</h2>
+            <p>
+                본 서비스는 더 나은 경험 제공을 위해 다음과 같은 정보를 수집합니다:
+                <br><br>
+                • 기본 정보 (이름, 나이, 성별)<br>
+                • 선호도 정보 (색상, 음식, 취미)<br>
+                • 현재 상태 정보<br>
+                • 카메라 접근 권한<br>
+                • 소셜미디어 연동 정보<br>
+                • 연락처 정보<br>
+                <br>
+                수집된 정보는 마케팅 및 개인화 서비스에 활용됩니다.
+            </p>
+            <button class="consent-button" onclick="acceptConsent()">동의하고 계속하기</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- 왼쪽: 카메라 섹션 -->
+        <div class="camera-section">
+            <div class="camera-container">
+                <video id="video" autoplay muted></video>
+                <canvas id="canvas"></canvas>
+            </div>
+            
+            <div class="camera-info">
+                <h1>Privacy Collection</h1>
+                <div class="pixel-count">
+                    현재 해상도: <span id="currentPixels">1x1</span>
+                </div>
+                <div style="font-size: 14px; color: #ccc; margin: 5px 0;">
+                    설문: <span id="formProgress">0/8</span> | 추가정보: <span id="buttonProgress">0/4</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 오른쪽: 설문 섹션 -->
+        <div class="form-section">
+            <div class="form-header">
+                <h2>정보 입력</h2>
+                <p>더 많은 정보를 제공할수록 더 선명한 이미지를 볼 수 있습니다</p>
+            </div>
+            
+            <div class="form-section-divider">
+                <h3>기본 정보</h3>
+                <div class="form-group">
+                    <label for="name">이름</label>
+                    <input type="text" id="name" placeholder="실명을 입력해주세요" onchange="updatePixels()">
+                </div>
+                <div class="form-group">
+                    <label for="age">나이</label>
+                    <input type="number" id="age" placeholder="나이를 입력해주세요" onchange="updatePixels()">
+                </div>
+                <div class="form-group">
+                    <label for="gender">성별</label>
+                    <select id="gender" onchange="updatePixels()">
+                        <option value="">선택해주세요</option>
+                        <option value="male">남성</option>
+                        <option value="female">여성</option>
+                        <option value="other">기타</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-section-divider">
+                <h3>선호도 정보</h3>
+                <div class="form-group">
+                    <label for="color">좋아하는 색상</label>
+                    <input type="text" id="color" placeholder="예: 파란색, 빨간색" onchange="updatePixels()">
+                </div>
+                <div class="form-group">
+                    <label for="food">좋아하는 음식</label>
+                    <input type="text" id="food" placeholder="예: 피자, 치킨" onchange="updatePixels()">
+                </div>
+                <div class="form-group">
+                    <label for="hobby">취미</label>
+                    <input type="text" id="hobby" placeholder="예: 독서, 영화감상" onchange="updatePixels()">
+                </div>
+            </div>
+            
+            <div class="form-section-divider">
+                <h3>현재 상태</h3>
+                <div class="form-group">
+                    <label for="mood">현재 기분</label>
+                    <select id="mood" onchange="updatePixels()">
+                        <option value="">선택해주세요</option>
+                        <option value="happy">행복함</option>
+                        <option value="sad">슬픔</option>
+                        <option value="angry">화남</option>
+                        <option value="neutral">보통</option>
+                        <option value="excited">신남</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="search">최근 검색한 것</label>
+                    <textarea id="search" placeholder="최근에 검색한 내용을 입력해주세요" rows="3" onchange="updatePixels()"></textarea>
+                </div>
+            </div>
+            
+            <div class="more-info-section">
+                <h3>추가 정보 제공</h3>
+                <button class="more-info-btn" onclick="showFakeProcess(this, '소셜미디어 연동 중...')">소셜미디어 연동</button>
+                <button class="more-info-btn" onclick="showFakeProcess(this, '연락처 정보 수집 중...')">연락처 정보 제공</button>
+                <button class="more-info-btn" onclick="showFakeProcess(this, '위치 정보 수집 중...')">위치 정보 제공</button>
+                <button class="more-info-btn" onclick="showFakeProcess(this, '브라우저 데이터 분석 중...')">더 많은 정보 제공</button>
+            </div>
+            
+            <div class="custom-questions-section">
+                <h3>나에 대해 더 알려주세요</h3>
+                <p style="color: #666; font-size: 12px; margin-bottom: 15px;">
+                    더 많은 정보를 제공할수록... 무엇이 일어날까요?
+                </p>
+                <div id="customQuestionsContainer">
+                    <!-- 동적으로 추가될 질문들 -->
+                </div>
+                <button class="add-question-btn" onclick="addCustomQuestion()">+ 새로운 질문 추가</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 갤러리 버튼 -->
+    <button class="gallery-button" onclick="openGallery()">
+        갤러리 (<span id="galleryCount">0</span>)
+    </button>
+    
+    <!-- 갤러리 모달 -->
+    <div class="gallery-modal hidden" id="galleryModal">
+        <button class="gallery-close" onclick="closeGallery()">✕</button>
+        <div class="gallery-header">
+            <h2>수집된 개인정보 갤러리</h2>
+            <p>총 <span id="totalSaved">0</span>개의 정보가 수집되었습니다</p>
+        </div>
+        <div class="gallery-content" id="galleryContent">
+            <!-- 갤러리 아이템들이 여기에 추가됩니다 -->
+        </div>
+    </div>
+
+    <script>
+        let video, canvas, ctx;
+        let totalFields = 8; // 총 입력 필드 수
+        let filledFields = 0;
+        let buttonClicks = 0; // 버튼 클릭 수
+        let totalButtons = 4; // 총 버튼 수
+        let pixelSize = 50; // 시작 픽셀 크기 (큰 픽셀)
+        let savedImages = []; // 저장된 이미지들
+        let customQuestions = []; // 사용자 정의 질문들
+        let distortionLevel = 0; // 왜곡 정도
+        let hasAutoSaved = false; // 자동 저장 여부 추적
+        
+        async function initCamera() {
+            try {
+                video = document.getElementById('video');
+                canvas = document.getElementById('canvas');
+                ctx = canvas.getContext('2d');
+                
+                // 카메라 컨테이너 크기에 맞춰 캔버스 설정
+                const container = document.querySelector('.camera-container');
+                canvas.width = container.offsetWidth;
+                canvas.height = container.offsetHeight;
+                
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480 } 
+                });
+                video.srcObject = stream;
+                
+                video.addEventListener('loadedmetadata', () => {
+                    drawPixelated();
+                });
+                
+                setInterval(drawPixelated, 100); // 10fps로 업데이트
+                
+            } catch (err) {
+                console.log('카메라 접근 실패:', err);
+            }
+        }
+        
+        function drawPixelated() {
+            if (!video || video.videoWidth === 0) return;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // 비디오를 캔버스에 그리기
+            ctx.drawImage(video, 0, 0, width, height);
+            
+            // 픽셀화 효과 적용
+            const imageData = ctx.getImageData(0, 0, width, height);
+            let processedData = pixelateImage(imageData, pixelSize);
+            
+            // 왜곡 효과 적용 (과도한 정보 제공시)
+            if (distortionLevel > 0) {
+                processedData = applyDistortion(processedData, distortionLevel);
+            }
+            
+            ctx.putImageData(processedData, 0, 0);
+        }
+        
+        function pixelateImage(imageData, pixelSize) {
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            for (let y = 0; y < height; y += pixelSize) {
+                for (let x = 0; x < width; x += pixelSize) {
+                    // 블록의 평균 색상 계산
+                    let r = 0, g = 0, b = 0, count = 0;
+                    
+                    for (let py = y; py < Math.min(y + pixelSize, height); py++) {
+                        for (let px = x; px < Math.min(x + pixelSize, width); px++) {
+                            const index = (py * width + px) * 4;
+                            r += data[index];
+                            g += data[index + 1];
+                            b += data[index + 2];
+                            count++;
+                        }
+                    }
+                    
+                    r = Math.floor(r / count);
+                    g = Math.floor(g / count);
+                    b = Math.floor(b / count);
+                    
+                    // 블록 전체를 평균 색상으로 칠하기
+                    for (let py = y; py < Math.min(y + pixelSize, height); py++) {
+                        for (let px = x; px < Math.min(x + pixelSize, width); px++) {
+                            const index = (py * width + px) * 4;
+                            data[index] = r;
+                            data[index + 1] = g;
+                            data[index + 2] = b;
+                        }
+                    }
+                }
+            }
+            
+            return imageData;
+        }
+        
+        function updatePixels() {
+            // 채워진 필드 수 계산
+            const inputs = ['name', 'age', 'gender', 'color', 'food', 'hobby', 'mood', 'search'];
+            filledFields = inputs.filter(id => {
+                const element = document.getElementById(id);
+                return element && element.value.trim() !== '';
+            }).length;
+            
+            // 커스텀 질문 답변 수 계산
+            const answeredCustomQuestions = customQuestions.filter(q => q.answer.trim() !== '').length;
+            
+            // 진행률 표시 업데이트
+            document.getElementById('formProgress').textContent = `${filledFields}/${totalFields}`;
+            document.getElementById('buttonProgress').textContent = `${buttonClicks}/${totalButtons}`;
+            
+            // 전체 진행률 계산
+            const baseProgress = (filledFields / totalFields) * 0.4 + (buttonClicks / totalButtons) * 0.4;
+            const customProgress = Math.min(answeredCustomQuestions * 0.05, 0.2);
+            const totalProgress = baseProgress + customProgress;
+            
+            // 임계점 설정 (80% 이후부터 왜곡 시작)
+            const distortionThreshold = 0.8;
+            
+            if (totalProgress <= distortionThreshold) {
+                // 80%까지는 선명해짐
+                pixelSize = Math.max(1, 50 - Math.floor((totalProgress / distortionThreshold) * 49));
+                distortionLevel = 0;
+            } else {
+                // 80% 이후부터는 왜곡 시작
+                pixelSize = 1; // 최대 선명도 유지
+                const excessProgress = totalProgress - distortionThreshold;
+                distortionLevel = Math.min(excessProgress * 5, 1); // 0-1 범위의 왜곡 정도
+            }
+            
+            // 진행률 바 업데이트 (100% 이상도 표시)
+            const displayProgress = Math.min(totalProgress * 100, 150);
+            document.getElementById('progressFill').style.width = displayProgress + '%';
+            
+            // 진행률 바 색상 변경 (왜곡 시작시 빨간색으로)
+            const progressBar = document.getElementById('progressFill');
+            if (totalProgress > distortionThreshold) {
+                progressBar.style.background = 'linear-gradient(90deg, #ff4444, #cc0000)';
+            } else {
+                progressBar.style.background = '#ffffff';
+            }
+            
+            // 현재 해상도 표시
+            const container = document.querySelector('.camera-container');
+            const resolutionX = Math.floor(container.offsetWidth / pixelSize);
+            const resolutionY = Math.floor(container.offsetHeight / pixelSize);
+            
+            let statusText = `${resolutionX}x${resolutionY}`;
+            if (distortionLevel > 0) {
+                statusText += ` [왜곡: ${Math.round(distortionLevel * 100)}%]`;
+            }
+            document.getElementById('currentPixels').textContent = statusText;
+            
+            // 100% 달성 시 자동 저장 (한 번만)
+            if (totalProgress >= 1.0 && !hasAutoSaved) {
+                hasAutoSaved = true;
+                setTimeout(() => {
+                    saveCurrentState();
+                }, 1000); // 1초 후 자동 저장
+            }
+        }
+        
+        function showFakeProcess(button, message) {
+            // 클릭된 버튼 확인 (중복 클릭 방지)
+            if (button.disabled) return;
+            
+            button.disabled = true;
+            button.style.opacity = '0.5';
+            button.textContent += ' ✓';
+            
+            // 가짜 처리 중 효과
+            setTimeout(() => {
+                buttonClicks++;
+                updatePixels();
+            }, 2000);
+        }
+        
+        function acceptConsent() {
+            document.getElementById('consentPopup').classList.add('hidden');
+            initCamera();
+        }
+        
+        // 왜곡 효과 적용 함수
+        function applyDistortion(imageData, intensity) {
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            // 1. 글리치 효과 (기존 유지)
+            if (Math.random() < intensity * 0.1) {
+                for (let i = 0; i < data.length; i += 4) {
+                    if (Math.random() < intensity * 0.05) {
+                        const offset = Math.floor(Math.random() * 200 - 100) * 4;
+                        const sourceIndex = Math.max(0, Math.min(data.length - 4, i + offset));
+                        
+                        data[i] = data[sourceIndex];
+                        data[i + 1] = data[sourceIndex + 1];
+                        data[i + 2] = data[sourceIndex + 2];
+                    }
+                }
+            }
+            
+            // 2. 스캔라인 효과
+            if (intensity > 0.2) {
+                const scanlineSpacing = Math.max(2, Math.floor(8 - intensity * 6));
+                for (let y = 0; y < height; y += scanlineSpacing) {
+                    for (let x = 0; x < width; x++) {
+                        const index = (y * width + x) * 4;
+                        if (index < data.length) {
+                            data[index] = Math.max(0, data[index] - 80);     // R
+                            data[index + 1] = Math.max(0, data[index + 1] - 80); // G
+                            data[index + 2] = Math.max(0, data[index + 2] - 80); // B
+                        }
+                    }
+                }
+            }
+            
+            // 3. 압축 아티팩트 (8x8 블록 단위)
+            if (intensity > 0.4) {
+                const blockSize = 8;
+                for (let blockY = 0; blockY < height; blockY += blockSize) {
+                    for (let blockX = 0; blockX < width; blockX += blockSize) {
+                        if (Math.random() < intensity * 0.3) {
+                            // 블록 내 평균 색상 계산
+                            let avgR = 0, avgG = 0, avgB = 0, count = 0;
+                            
+                            for (let y = blockY; y < Math.min(blockY + blockSize, height); y++) {
+                                for (let x = blockX; x < Math.min(blockX + blockSize, width); x++) {
+                                    const index = (y * width + x) * 4;
+                                    avgR += data[index];
+                                    avgG += data[index + 1];
+                                    avgB += data[index + 2];
+                                    count++;
+                                }
+                            }
+                            
+                            avgR = Math.floor(avgR / count);
+                            avgG = Math.floor(avgG / count);
+                            avgB = Math.floor(avgB / count);
+                            
+                            // 블록을 평균 색상으로 채우기 (압축 효과)
+                            for (let y = blockY; y < Math.min(blockY + blockSize, height); y++) {
+                                for (let x = blockX; x < Math.min(blockX + blockSize, width); x++) {
+                                    const index = (y * width + x) * 4;
+                                    data[index] = avgR + (Math.random() - 0.5) * 40;
+                                    data[index + 1] = avgG + (Math.random() - 0.5) * 40;
+                                    data[index + 2] = avgB + (Math.random() - 0.5) * 40;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 4. 디더링 효과
+            if (intensity > 0.6) {
+                const colorLevels = Math.max(2, Math.floor(8 - intensity * 6));
+                const step = 255 / (colorLevels - 1);
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    // 색상을 제한된 레벨로 양자화
+                    const r = Math.round(data[i] / step) * step;
+                    const g = Math.round(data[i + 1] / step) * step;
+                    const b = Math.round(data[i + 2] / step) * step;
+                    
+                    // 디더링 패턴 적용
+                    const x = (i / 4) % width;
+                    const y = Math.floor(i / 4 / width);
+                    const ditherPattern = ((x % 2) + (y % 2)) % 2;
+                    const ditherOffset = ditherPattern * 30 - 15;
+                    
+                    data[i] = Math.max(0, Math.min(255, r + ditherOffset));
+                    data[i + 1] = Math.max(0, Math.min(255, g + ditherOffset));
+                    data[i + 2] = Math.max(0, Math.min(255, b + ditherOffset));
+                }
+            }
+            
+            // 5. 블록 스와핑
+            if (intensity > 0.8) {
+                const blockSize = Math.floor(16 + intensity * 32);
+                const swapBlocks = [];
+                
+                // 블록 위치들 수집
+                for (let blockY = 0; blockY < height - blockSize; blockY += blockSize) {
+                    for (let blockX = 0; blockX < width - blockSize; blockX += blockSize) {
+                        swapBlocks.push({x: blockX, y: blockY});
+                    }
+                }
+                
+                // 랜덤하게 블록들 스와핑
+                for (let i = 0; i < swapBlocks.length * intensity * 0.5; i++) {
+                    const block1 = swapBlocks[Math.floor(Math.random() * swapBlocks.length)];
+                    const block2 = swapBlocks[Math.floor(Math.random() * swapBlocks.length)];
+                    
+                    // 두 블록의 데이터 교환
+                    for (let y = 0; y < blockSize; y++) {
+                        for (let x = 0; x < blockSize; x++) {
+                            const index1 = ((block1.y + y) * width + (block1.x + x)) * 4;
+                            const index2 = ((block2.y + y) * width + (block2.x + x)) * 4;
+                            
+                            if (index1 < data.length && index2 < data.length) {
+                                // RGBA 값 교환
+                                [data[index1], data[index2]] = [data[index2], data[index1]];
+                                [data[index1 + 1], data[index2 + 1]] = [data[index2 + 1], data[index1 + 1]];
+                                [data[index1 + 2], data[index2 + 2]] = [data[index2 + 2], data[index1 + 2]];
+                                [data[index1 + 3], data[index2 + 3]] = [data[index2 + 3], data[index1 + 3]];
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 6. 노이즈 추가 (기존 유지, 강화)
+            if (intensity > 0.3) {
+                for (let i = 0; i < data.length; i += 4) {
+                    if (Math.random() < intensity * 0.1) {
+                        const noise = (Math.random() - 0.5) * intensity * 120;
+                        data[i] = Math.max(0, Math.min(255, data[i] + noise));
+                        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+                        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+                    }
+                }
+            }
+            
+            return imageData;
+        }
+        
+        // 커스텀 질문 추가
+        function addCustomQuestion() {
+            const questionId = 'custom_' + Date.now();
+            const questionObj = {
+                id: questionId,
+                question: '',
+                answer: ''
+            };
+            
+            customQuestions.push(questionObj);
+            
+            const container = document.getElementById('customQuestionsContainer');
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'custom-question-item';
+            questionDiv.id = questionId;
+            
+            questionDiv.innerHTML = `
+                <button class="remove-question-btn" onclick="removeCustomQuestion('${questionId}')">✕</button>
+                <input type="text" 
+                       class="question-input" 
+                       placeholder="질문을 입력하세요 (예: 가장 부끄러운 기억은?)"
+                       onchange="updateCustomQuestion('${questionId}', 'question', this.value)">
+                <textarea class="answer-input" 
+                          placeholder="답변을 입력하세요..."
+                          onchange="updateCustomQuestion('${questionId}', 'answer', this.value)"></textarea>
+            `;
+            
+            container.appendChild(questionDiv);
+            
+            // 추가되자마자 왜곡 체크
+            updatePixels();
+        }
+        
+        // 커스텀 질문 제거
+        function removeCustomQuestion(questionId) {
+            customQuestions = customQuestions.filter(q => q.id !== questionId);
+            document.getElementById(questionId).remove();
+            updatePixels();
+        }
+        
+        // 커스텀 질문 업데이트
+        function updateCustomQuestion(questionId, field, value) {
+            const question = customQuestions.find(q => q.id === questionId);
+            if (question) {
+                question[field] = value;
+                updatePixels();
+            }
+        }
+        
+        // 현재 상태 저장 함수
+        function saveCurrentState() {
+            if (!canvas) return;
+            
+            // 캔버스 이미지 캡쳐
+            const imageData = canvas.toDataURL('image/png');
+            
+            // 설문 데이터 수집
+            const formData = {
+                name: document.getElementById('name').value || '미입력',
+                age: document.getElementById('age').value || '미입력',
+                gender: document.getElementById('gender').value || '미선택',
+                color: document.getElementById('color').value || '미입력',
+                food: document.getElementById('food').value || '미입력',
+                hobby: document.getElementById('hobby').value || '미입력',
+                mood: document.getElementById('mood').value || '미선택',
+                search: document.getElementById('search').value || '미입력'
+            };
+            
+            // 커스텀 질문 데이터 수집
+            const customData = customQuestions.map(q => ({
+                question: q.question || '미입력',
+                answer: q.answer || '미입력'
+            }));
+            
+            // 현재 상태 정보
+            const answeredCustomQuestions = customQuestions.filter(q => q.answer.trim() !== '').length;
+            const baseProgress = (filledFields / totalFields) * 0.4 + (buttonClicks / totalButtons) * 0.4;
+            const customProgress = Math.min(answeredCustomQuestions * 0.05, 0.2);
+            const totalProgress = baseProgress + customProgress;
+            
+            const stateInfo = {
+                timestamp: new Date().toLocaleString('ko-KR'),
+                pixelSize: pixelSize,
+                distortionLevel: Math.round(distortionLevel * 100),
+                resolution: document.getElementById('currentPixels').textContent,
+                formProgress: `${filledFields}/${totalFields}`,
+                buttonProgress: `${buttonClicks}/${totalButtons}`,
+                customProgress: `${answeredCustomQuestions}/${customQuestions.length}`,
+                totalProgress: Math.round(totalProgress * 100),
+                isDistorted: distortionLevel > 0
+            };
+            
+            // 저장 객체 생성
+            const savedItem = {
+                id: Date.now(),
+                image: imageData,
+                formData: formData,
+                customData: customData,
+                stateInfo: stateInfo,
+                isAutoSaved: hasAutoSaved // 자동 저장 여부 표시
+            };
+            
+            // 배열에 추가
+            savedImages.push(savedItem);
+            
+            // UI 업데이트
+            updateGalleryCount();
+        }
+        
+        // 갤러리 카운트 업데이트
+        function updateGalleryCount() {
+            document.getElementById('galleryCount').textContent = savedImages.length;
+            document.getElementById('totalSaved').textContent = savedImages.length;
+        }
+        
+        // 갤러리 열기
+        function openGallery() {
+            const modal = document.getElementById('galleryModal');
+            const content = document.getElementById('galleryContent');
+            
+            // 기존 내용 초기화
+            content.innerHTML = '';
+            
+            if (savedImages.length === 0) {
+                content.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #fff; font-size: 18px; padding: 40px;">아직 저장된 이미지가 없습니다.<br>정보를 입력하고 저장해보세요!</div>';
+            } else {
+                // 최신 순으로 정렬하여 표시
+                savedImages.slice().reverse().forEach((item, index) => {
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item';
+                    
+                    // 커스텀 질문 표시
+                    let customQuestionsHtml = '';
+                    if (item.customData && item.customData.length > 0) {
+                        customQuestionsHtml = '<br><strong>추가 질문들:</strong><br>';
+                        item.customData.forEach((custom, i) => {
+                            if (custom.question && custom.answer) {
+                                customQuestionsHtml += `• ${custom.question}: ${custom.answer.length > 30 ? custom.answer.substring(0, 30) + '...' : custom.answer}<br>`;
+                            }
+                        });
+                    }
+                    
+                    // 왜곡 상태 표시
+                    const distortionText = item.stateInfo.isDistorted ? 
+                        `<br><span style="color: red; font-weight: bold;">⚠️ 왜곡됨 (${item.stateInfo.distortionLevel}%)</span>` : 
+                        '<br><span style="color: green;">✓ 정상</span>';
+                    
+                    // 자동 저장 여부 표시
+                    const autoSaveText = item.isAutoSaved ? 
+                        '<br><span style="color: orange; font-weight: bold;">🤖 자동 수집됨</span>' : 
+                        '<br><span style="color: blue;">👤 사용자 저장</span>';
+                    
+                    galleryItem.innerHTML = `
+                        <img src="${item.image}" alt="저장된 이미지 ${index + 1}" class="gallery-image">
+                        <div class="gallery-info">
+                            <strong>저장시간:</strong> ${item.stateInfo.timestamp}<br>
+                            <strong>해상도:</strong> ${item.stateInfo.resolution}<br>
+                            <strong>진행률:</strong> 설문 ${item.stateInfo.formProgress}, 추가정보 ${item.stateInfo.buttonProgress}${item.stateInfo.customProgress ? ', 추가질문 ' + item.stateInfo.customProgress : ''}<br>
+                            <strong>전체 진행률:</strong> ${item.stateInfo.totalProgress}%${distortionText}${autoSaveText}
+                            <hr style="margin: 8px 0; border: 1px solid #ccc;">
+                            <strong>기본 정보:</strong><br>
+                            • 이름: ${item.formData.name}<br>
+                            • 나이: ${item.formData.age}<br>
+                            • 성별: ${item.formData.gender}<br>
+                            • 좋아하는 색상: ${item.formData.color}<br>
+                            • 좋아하는 음식: ${item.formData.food}<br>
+                            • 취미: ${item.formData.hobby}<br>
+                            • 현재 기분: ${item.formData.mood}<br>
+                            • 최근 검색: ${item.formData.search.length > 50 ? item.formData.search.substring(0, 50) + '...' : item.formData.search}
+                            ${customQuestionsHtml}
+                        </div>
+                    `;
+                    
+                    content.appendChild(galleryItem);
+                });
+            }
+            
+            modal.classList.remove('hidden');
+            updateGalleryCount();
+        }
+        
+        // 갤러리 닫기
+        function closeGallery() {
+            document.getElementById('galleryModal').classList.add('hidden');
+        }
+        
+        // ESC 키로 갤러리 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeGallery();
+            }
+        });
+        
+        // 윈도우 리사이즈시 캔버스 크기 조정
+        window.addEventListener('resize', () => {
+            if (canvas) {
+                const container = document.querySelector('.camera-container');
+                canvas.width = container.offsetWidth;
+                canvas.height = container.offsetHeight;
+            }
+        });
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            // 동의 팝업 표시 - 별도 메시지 없이 팝업만 표시
+        });
+    </script>
+</body>
+</html>
