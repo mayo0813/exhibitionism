@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>개인정보 수집 동의 - Privacy Collection</title>
+    <title>Exhibitionism - Digital Privacy Art</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_three@1.0/DungGeunMo.woff') format('woff');
         
@@ -307,6 +307,16 @@
             color: #000;
         }
         
+        .add-question-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .add-question-btn:disabled:hover {
+            background: #000;
+            color: #fff;
+        }
+        
         .save-button {
             position: absolute;
             bottom: 20px;
@@ -436,7 +446,7 @@
     <!-- 개인정보 동의 팝업 -->
     <div class="consent-popup" id="consentPopup">
         <div class="consent-content">
-            <h2>개인정보 수집 및 이용 동의</h2>
+            <h2>개인정보 노출 동의</h2>
             <p>
                 본 서비스는 더 나은 경험 제공을 위해 다음과 같은 정보를 수집합니다:
                 <br><br>
@@ -462,7 +472,7 @@
             </div>
             
             <div class="camera-info">
-                <h1>Privacy Collection</h1>
+                <h1>Exhibitionism</h1>
                 <div class="pixel-count">
                     현재 해상도: <span id="currentPixels">1x1</span>
                 </div>
@@ -549,7 +559,7 @@
             <div class="custom-questions-section">
                 <h3>나에 대해 더 알려주세요</h3>
                 <p style="color: #666; font-size: 12px; margin-bottom: 15px;">
-                    더 많은 정보를 제공할수록... 무엇이 일어날까요?
+                    최대 3개까지 추가 질문을 만들 수 있습니다. 더 많은 정보를 제공할수록... 무엇이 일어날까요?
                 </p>
                 <div id="customQuestionsContainer">
                     <!-- 동적으로 추가될 질문들 -->
@@ -568,8 +578,8 @@
     <div class="gallery-modal hidden" id="galleryModal">
         <button class="gallery-close" onclick="closeGallery()">✕</button>
         <div class="gallery-header">
-            <h2>수집된 개인정보 갤러리</h2>
-            <p>총 <span id="totalSaved">0</span>개의 정보가 수집되었습니다</p>
+            <h2>Exhibitionism Gallery</h2>
+            <p>총 <span id="totalSaved">0</span>개의 노출 기록이 수집되었습니다</p>
         </div>
         <div class="gallery-content" id="galleryContent">
             <!-- 갤러리 아이템들이 여기에 추가됩니다 -->
@@ -578,7 +588,7 @@
 
     <script>
         let video, canvas, ctx;
-        let totalFields = 8; // 총 입력 필드 수
+        let totalFields = 8; // 총 입력 필드 수 (원래대로)
         let filledFields = 0;
         let buttonClicks = 0; // 버튼 클릭 수
         let totalButtons = 4; // 총 버튼 수
@@ -587,6 +597,9 @@
         let customQuestions = []; // 사용자 정의 질문들
         let distortionLevel = 0; // 왜곡 정도
         let hasAutoSaved = false; // 자동 저장 여부 추적
+        let maxCustomQuestions = 3; // 커스텀 질문 최대 개수
+        let dataFragments = []; // 데이터 조각들
+        let userKeywords = []; // 사용자 입력 키워드들
         
         async function initCamera() {
             try {
@@ -634,6 +647,9 @@
             }
             
             ctx.putImageData(processedData, 0, 0);
+            
+            // 실시간에서는 데이터 조각을 그리지 않음
+            // drawDataFragments(); <- 제거됨
         }
         
         function pixelateImage(imageData, pixelSize) {
@@ -676,12 +692,15 @@
         }
         
         function updatePixels() {
-            // 채워진 필드 수 계산
+            // 채워진 필드 수 계산 (원래대로)
             const inputs = ['name', 'age', 'gender', 'color', 'food', 'hobby', 'mood', 'search'];
             filledFields = inputs.filter(id => {
                 const element = document.getElementById(id);
                 return element && element.value.trim() !== '';
             }).length;
+            
+            // 사용자 입력에서 키워드 추출 및 데이터 조각 생성
+            extractAndCreateFragments();
             
             // 커스텀 질문 답변 수 계산
             const answeredCustomQuestions = customQuestions.filter(q => q.answer.trim() !== '').length;
@@ -690,33 +709,41 @@
             document.getElementById('formProgress').textContent = `${filledFields}/${totalFields}`;
             document.getElementById('buttonProgress').textContent = `${buttonClicks}/${totalButtons}`;
             
-            // 전체 진행률 계산
-            const baseProgress = (filledFields / totalFields) * 0.4 + (buttonClicks / totalButtons) * 0.4;
-            const customProgress = Math.min(answeredCustomQuestions * 0.05, 0.2);
+            // 기본 설문과 버튼으로만 100% 달성 (완전 선명)
+            const baseProgress = (filledFields / totalFields) * 0.7 + (buttonClicks / totalButtons) * 0.3;
+            
+            // 커스텀 질문은 왜곡만 유발 (100% 이상)
+            const customProgress = answeredCustomQuestions * 0.1; // 각 질문마다 10%씩 추가
             const totalProgress = baseProgress + customProgress;
             
-            // 임계점 설정 (80% 이후부터 왜곡 시작)
-            const distortionThreshold = 0.8;
-            
-            if (totalProgress <= distortionThreshold) {
-                // 80%까지는 선명해짐
-                pixelSize = Math.max(1, 50 - Math.floor((totalProgress / distortionThreshold) * 49));
-                distortionLevel = 0;
+            if (baseProgress >= 1.0) {
+                // 기본 100% 달성 시 완전 선명
+                pixelSize = 1;
+                
+                // 커스텀 질문에 따른 왜곡 3단계
+                if (answeredCustomQuestions === 0) {
+                    distortionLevel = 0; // 왜곡 없음
+                } else if (answeredCustomQuestions === 1) {
+                    distortionLevel = 0.3; // 1단계 왜곡
+                } else if (answeredCustomQuestions === 2) {
+                    distortionLevel = 0.6; // 2단계 왜곡  
+                } else if (answeredCustomQuestions >= 3) {
+                    distortionLevel = 1.0; // 3단계 왜곡 (최대)
+                }
             } else {
-                // 80% 이후부터는 왜곡 시작
-                pixelSize = 1; // 최대 선명도 유지
-                const excessProgress = totalProgress - distortionThreshold;
-                distortionLevel = Math.min(excessProgress * 5, 1); // 0-1 범위의 왜곡 정도
+                // 100% 미달성 시 픽셀화만 적용
+                pixelSize = Math.max(1, 50 - Math.floor(baseProgress * 49));
+                distortionLevel = 0;
             }
             
-            // 진행률 바 업데이트 (100% 이상도 표시)
+            // 진행률 바 업데이트 (150%까지 표시 가능)
             const displayProgress = Math.min(totalProgress * 100, 150);
             document.getElementById('progressFill').style.width = displayProgress + '%';
             
             // 진행률 바 색상 변경 (왜곡 시작시 빨간색으로)
             const progressBar = document.getElementById('progressFill');
-            if (totalProgress > distortionThreshold) {
-                progressBar.style.background = 'linear-gradient(90deg, #ff4444, #cc0000)';
+            if (answeredCustomQuestions > 0 && baseProgress >= 1.0) {
+                progressBar.style.background = `linear-gradient(90deg, #ff4444, #cc0000)`;
             } else {
                 progressBar.style.background = '#ffffff';
             }
@@ -728,16 +755,24 @@
             
             let statusText = `${resolutionX}x${resolutionY}`;
             if (distortionLevel > 0) {
-                statusText += ` [왜곡: ${Math.round(distortionLevel * 100)}%]`;
+                const stage = answeredCustomQuestions;
+                statusText += ` [왜곡 ${stage}단계: ${Math.round(distortionLevel * 100)}%]`;
+            }
+            if (dataFragments.filter(f => f.valid).length > 0) {
+                statusText += ` [데이터조각: ${dataFragments.filter(f => f.valid).length}]`;
             }
             document.getElementById('currentPixels').textContent = statusText;
             
-            // 100% 달성 시 자동 저장 (한 번만)
-            if (totalProgress >= 1.0 && !hasAutoSaved) {
+            // 자동 저장은 커스텀 질문 3개 완료시
+            if (answeredCustomQuestions >= 3 && !hasAutoSaved) {
                 hasAutoSaved = true;
                 setTimeout(() => {
                     saveCurrentState();
-                }, 1000); // 1초 후 자동 저장
+                    // 저장 후 폼 리셋
+                    setTimeout(() => {
+                        resetForm();
+                    }, 2000);
+                }, 1000);
             }
         }
         
@@ -759,6 +794,7 @@
         function acceptConsent() {
             document.getElementById('consentPopup').classList.add('hidden');
             initCamera();
+            loadSavedImages(); // 이전 저장된 이미지들 불러오기
         }
         
         // 왜곡 효과 적용 함수
@@ -908,6 +944,11 @@
         
         // 커스텀 질문 추가
         function addCustomQuestion() {
+            // 최대 3개까지만 허용
+            if (customQuestions.length >= maxCustomQuestions) {
+                return;
+            }
+            
             const questionId = 'custom_' + Date.now();
             const questionObj = {
                 id: questionId,
@@ -935,6 +976,9 @@
             
             container.appendChild(questionDiv);
             
+            // 버튼 상태 업데이트
+            updateAddButton();
+            
             // 추가되자마자 왜곡 체크
             updatePixels();
         }
@@ -943,7 +987,22 @@
         function removeCustomQuestion(questionId) {
             customQuestions = customQuestions.filter(q => q.id !== questionId);
             document.getElementById(questionId).remove();
+            updateAddButton();
             updatePixels();
+        }
+        
+        // 추가 버튼 상태 업데이트
+        function updateAddButton() {
+            const addButton = document.querySelector('.add-question-btn');
+            if (customQuestions.length >= maxCustomQuestions) {
+                addButton.textContent = `최대 ${maxCustomQuestions}개까지 가능`;
+                addButton.disabled = true;
+                addButton.style.opacity = '0.5';
+            } else {
+                addButton.textContent = '+ 새로운 질문 추가';
+                addButton.disabled = false;
+                addButton.style.opacity = '1';
+            }
         }
         
         // 커스텀 질문 업데이트
@@ -951,7 +1010,7 @@
             const question = customQuestions.find(q => q.id === questionId);
             if (question) {
                 question[field] = value;
-                updatePixels();
+                updatePixels(); // 키워드 추출 및 조각 생성 포함
             }
         }
         
@@ -959,10 +1018,24 @@
         function saveCurrentState() {
             if (!canvas) return;
             
-            // 캔버스 이미지 캡쳐
+            // 현재 캔버스 상태 임시 저장
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            // 데이터 조각들을 최종 이미지에 합성
+            drawDataFragments();
+            
+            // 데이터 조각이 합성된 캔버스 이미지 캡쳐
             const imageData = canvas.toDataURL('image/png');
             
-            // 설문 데이터 수집
+            // 원래 상태로 복원 (실시간 화면에는 조각 없음)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(tempCanvas, 0, 0);
+            
+            // 설문 데이터 수집 (원래대로)
             const formData = {
                 name: document.getElementById('name').value || '미입력',
                 age: document.getElementById('age').value || '미입력',
@@ -993,7 +1066,7 @@
                 resolution: document.getElementById('currentPixels').textContent,
                 formProgress: `${filledFields}/${totalFields}`,
                 buttonProgress: `${buttonClicks}/${totalButtons}`,
-                customProgress: `${answeredCustomQuestions}/${customQuestions.length}`,
+                customProgress: `${answeredCustomQuestions}/${Math.min(customQuestions.length, maxCustomQuestions)}`,
                 totalProgress: Math.round(totalProgress * 100),
                 isDistorted: distortionLevel > 0
             };
@@ -1011,11 +1084,294 @@
             // 배열에 추가
             savedImages.push(savedItem);
             
+            // localStorage에 영구 저장
+            localStorage.setItem('exhibitionismImages', JSON.stringify(savedImages));
+            
             // UI 업데이트
             updateGalleryCount();
         }
         
-        // 갤러리 카운트 업데이트
+        // localStorage에서 저장된 이미지들 불러오기
+        function loadSavedImages() {
+            try {
+                const saved = localStorage.getItem('exhibitionismImages');
+                if (saved) {
+                    savedImages = JSON.parse(saved);
+                    updateGalleryCount();
+                }
+            } catch (error) {
+                console.log('저장된 데이터 로드 실패:', error);
+                savedImages = [];
+            }
+        }
+        
+        // 폼 리셋 함수
+        function resetForm() {
+            // 기본 폼 필드 리셋 (원래대로)
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('gender').value = '';
+            document.getElementById('color').value = '';
+            document.getElementById('food').value = '';
+            document.getElementById('hobby').value = '';
+            document.getElementById('mood').value = '';
+            document.getElementById('search').value = '';
+            
+            // 추가 정보 버튼들 리셋
+            const buttons = document.querySelectorAll('.more-info-btn');
+            buttons.forEach(button => {
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.textContent = button.textContent.replace(' ✓', '');
+            });
+            
+            // 커스텀 질문들 모두 제거
+            customQuestions = [];
+            document.getElementById('customQuestionsContainer').innerHTML = '';
+            updateAddButton();
+            
+            // 데이터 조각들 초기화
+            dataFragments = [];
+            userKeywords = [];
+            
+            // 상태 변수들 리셋
+            filledFields = 0;
+            buttonClicks = 0;
+            distortionLevel = 0;
+            pixelSize = 50;
+            hasAutoSaved = false;
+            
+            // UI 업데이트
+            updatePixels();
+        }
+        
+        // 키워드 추출 및 데이터 조각 생성
+        function extractAndCreateFragments() {
+            const inputs = ['name', 'age', 'gender', 'color', 'food', 'hobby', 'mood', 'search'];
+            const newKeywords = [];
+            
+            // 기본 폼에서 키워드 추출
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element && element.value.trim() !== '') {
+                    const words = element.value.trim().split(/[\s,]+/);
+                    words.forEach(word => {
+                        if (word.length > 2 && !userKeywords.includes(word)) {
+                            newKeywords.push(word);
+                        }
+                    });
+                }
+            });
+            
+            // 커스텀 질문에서 키워드 추출
+            customQuestions.forEach(q => {
+                if (q.question.trim() !== '') {
+                    const words = q.question.trim().split(/[\s,]+/);
+                    words.forEach(word => {
+                        if (word.length > 2 && !userKeywords.includes(word)) {
+                            newKeywords.push(word);
+                        }
+                    });
+                }
+                if (q.answer.trim() !== '') {
+                    const words = q.answer.trim().split(/[\s,]+/);
+                    words.forEach(word => {
+                        if (word.length > 2 && !userKeywords.includes(word)) {
+                            newKeywords.push(word);
+                        }
+                    });
+                }
+            });
+            
+            // 새로운 키워드들로 데이터 조각 생성
+            newKeywords.forEach(keyword => {
+                createDataFragment(keyword);
+                userKeywords.push(keyword);
+            });
+            
+            // 유효하지 않은 조각들 정리
+            cleanupInvalidFragments();
+        }
+        
+        // 유효하지 않은 데이터 조각들 정리
+        function cleanupInvalidFragments() {
+            // 로드가 완료되었지만 유효하지 않은 조각들 제거
+            dataFragments = dataFragments.filter(fragment => {
+                return !fragment.loaded || fragment.valid;
+            });
+        }
+        
+        // 개별 데이터 조각 생성
+        function createDataFragment(keyword) {
+            if (!canvas) return;
+            
+            const fragment = {
+                keyword: keyword,
+                x: Math.random() * (canvas.width - 100),
+                y: Math.random() * (canvas.height - 100),
+                width: 80 + Math.random() * 40,
+                height: 60 + Math.random() * 30,
+                rotation: (Math.random() - 0.5) * 0.5,
+                opacity: 0.7 + Math.random() * 0.3,
+                imageUrl: generateImageUrl(keyword),
+                loaded: false,
+                image: new Image(),
+                valid: false // 유효한 조각인지 표시
+            };
+            
+            // 이미지 로드
+            fragment.image.crossOrigin = 'anonymous';
+            fragment.image.onload = () => {
+                fragment.loaded = true;
+                fragment.valid = true;
+            };
+            fragment.image.onerror = () => {
+                fragment.loaded = true;
+                fragment.valid = false; // 로드 실패시 무효 처리
+            };
+            fragment.image.src = fragment.imageUrl;
+            
+            dataFragments.push(fragment);
+            
+            // 최대 15개까지만 유지
+            if (dataFragments.length > 15) {
+                dataFragments.shift();
+            }
+        }
+        
+        // 키워드 기반 이미지 URL 생성
+        function generateImageUrl(keyword) {
+            // 여러 이미지 서비스 중 랜덤 선택
+            const services = [
+                `https://source.unsplash.com/100x80/?${encodeURIComponent(keyword)}`,
+                `https://picsum.photos/100/80?random=${Math.floor(Math.random() * 1000)}`,
+                `https://source.unsplash.com/featured/100x80/?${encodeURIComponent(keyword)}`
+            ];
+            return services[Math.floor(Math.random() * services.length)];
+        }
+        
+        // 데이터 조각들 그리기 (리얼한 종이 조각 효과)
+        function drawDataFragments() {
+            if (!ctx || dataFragments.length === 0) return;
+            
+            dataFragments.forEach(fragment => {
+                // 로드되었고 유효한 이미지만 그리기
+                if (!fragment.loaded || !fragment.valid || !fragment.image.complete) return;
+                
+                ctx.save();
+                ctx.translate(fragment.x + fragment.width/2, fragment.y + fragment.height/2);
+                ctx.rotate(fragment.rotation);
+                
+                // 그림자 효과 먼저 그리기
+                ctx.save();
+                ctx.translate(3, 3); // 그림자 오프셋
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = '#000000';
+                
+                const shadowPoints = generateRealisticTornEdge(fragment.width, fragment.height);
+                ctx.beginPath();
+                ctx.moveTo(shadowPoints[0].x, shadowPoints[0].y);
+                for (let i = 1; i < shadowPoints.length; i++) {
+                    ctx.lineTo(shadowPoints[i].x, shadowPoints[i].y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+                
+                // 메인 조각 그리기
+                ctx.globalAlpha = fragment.opacity;
+                
+                // 찢어진 종이 효과를 위한 클리핑 패스
+                const points = generateRealisticTornEdge(fragment.width, fragment.height);
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    // 베지어 곡선으로 더 자연스러운 가장자리
+                    const current = points[i];
+                    const next = points[(i + 1) % points.length];
+                    ctx.quadraticCurveTo(
+                        current.x + (Math.random() - 0.5) * 3,
+                        current.y + (Math.random() - 0.5) * 3,
+                        next.x,
+                        next.y
+                    );
+                }
+                ctx.closePath();
+                ctx.clip();
+                
+                // 이미지 그리기
+                ctx.drawImage(fragment.image, -fragment.width/2, -fragment.height/2, fragment.width, fragment.height);
+                
+                // 조각의 테두리와 주름 효과
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.globalAlpha = 0.1;
+                
+                // 주름 효과
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(-fragment.width/2 + Math.random() * fragment.width, -fragment.height/2);
+                    ctx.quadraticCurveTo(
+                        Math.random() * fragment.width - fragment.width/2,
+                        Math.random() * fragment.height - fragment.height/2,
+                        fragment.width/2, 
+                        Math.random() * fragment.height - fragment.height/2
+                    );
+                    ctx.strokeStyle = '#666666';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+                
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.globalAlpha = 1;
+                
+                // 찢어진 가장자리 강조
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.closePath();
+                ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.restore();
+            });
+        }
+        
+        // 리얼한 찢어진 가장자리 생성
+        function generateRealisticTornEdge(width, height) {
+            const points = [];
+            const segments = 16; // 더 많은 세그먼트로 부드러운 곡선
+            const baseRoughness = 8;
+            
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                const baseRadius = Math.min(width, height) / 2;
+                
+                // 타원형 기본 모양
+                const ellipseX = Math.cos(angle) * width/2;
+                const ellipseY = Math.sin(angle) * height/2;
+                
+                // 찢어진 효과를 위한 불규칙한 오프셋
+                const roughness = baseRoughness * (0.5 + Math.random() * 0.5);
+                const offsetX = (Math.random() - 0.5) * roughness;
+                const offsetY = (Math.random() - 0.5) * roughness;
+                
+                // 일부 지점에서 더 깊게 찢어진 효과
+                let tearDepth = 1;
+                if (Math.random() < 0.3) { // 30% 확률로 깊은 찢김
+                    tearDepth = 0.7 + Math.random() * 0.2;
+                }
+                
+                points.push({
+                    x: (ellipseX + offsetX) * tearDepth,
+                    y: (ellipseY + offsetY) * tearDepth
+                });
+            }
+            
+            return points;
+        }
         function updateGalleryCount() {
             document.getElementById('galleryCount').textContent = savedImages.length;
             document.getElementById('totalSaved').textContent = savedImages.length;
@@ -1058,13 +1414,21 @@
                         '<br><span style="color: orange; font-weight: bold;">🤖 자동 수집됨</span>' : 
                         '<br><span style="color: blue;">👤 사용자 저장</span>';
                     
+                    // 키워드 정보 표시
+                    let keywordsHtml = '';
+                    if (item.stateInfo.keywords && item.stateInfo.keywords.length > 0) {
+                        keywordsHtml = `<br><strong>추출된 키워드:</strong> ${item.stateInfo.keywords.slice(0, 10).join(', ')}${item.stateInfo.keywords.length > 10 ? '...' : ''}`;
+                    }
+                    
                     galleryItem.innerHTML = `
+                        <button class="delete-image-btn" onclick="deleteImage(${item.id})">삭제</button>
                         <img src="${item.image}" alt="저장된 이미지 ${index + 1}" class="gallery-image">
                         <div class="gallery-info">
                             <strong>저장시간:</strong> ${item.stateInfo.timestamp}<br>
                             <strong>해상도:</strong> ${item.stateInfo.resolution}<br>
+                            <strong>데이터 조각:</strong> ${item.stateInfo.dataFragments || 0}개<br>
                             <strong>진행률:</strong> 설문 ${item.stateInfo.formProgress}, 추가정보 ${item.stateInfo.buttonProgress}${item.stateInfo.customProgress ? ', 추가질문 ' + item.stateInfo.customProgress : ''}<br>
-                            <strong>전체 진행률:</strong> ${item.stateInfo.totalProgress}%${distortionText}${autoSaveText}
+                            <strong>전체 진행률:</strong> ${item.stateInfo.totalProgress}%${distortionText}${autoSaveText}${keywordsHtml}
                             <hr style="margin: 8px 0; border: 1px solid #ccc;">
                             <strong>기본 정보:</strong><br>
                             • 이름: ${item.formData.name}<br>
@@ -1099,6 +1463,20 @@
             }
         });
         
+        // 개별 이미지 삭제
+        function deleteImage(imageId) {
+            if (confirm('이 이미지를 삭제하시겠습니까?')) {
+                // 배열에서 제거
+                savedImages = savedImages.filter(item => item.id !== imageId);
+                
+                // localStorage 업데이트
+                localStorage.setItem('privacyCollectionImages', JSON.stringify(savedImages));
+                
+                // 갤러리 새로고침
+                openGallery();
+            }
+        }
+        
         // 윈도우 리사이즈시 캔버스 크기 조정
         window.addEventListener('resize', () => {
             if (canvas) {
@@ -1110,7 +1488,8 @@
         
         // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', () => {
-            // 동의 팝업 표시 - 별도 메시지 없이 팝업만 표시
+            // 저장된 이미지들 불러오기
+            loadSavedImages();
         });
     </script>
 </body>
